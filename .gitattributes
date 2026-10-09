@@ -1,0 +1,4 @@
+data/grammar-tables/*.json -text
+data/*.json -text
+*.sh text eol=lf
+*.rs text eol=lf

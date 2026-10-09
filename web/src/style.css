@@ -1,0 +1,763 @@
+/*
+ * LexParser — design tokens
+ *
+ * Matches the Utharam house system (https://utharam.in) rather than inventing a new
+ * one, so this tool sits beside SheetHound and LexHop without looking like a different
+ * company. The values below are copied from that site's `--*` custom properties, plus
+ * the dark palette from its `.dark` class.
+ *
+ * Light is the default, matching the landing page. Dark follows the OS preference with
+ * no toggle, because a parser is a tool you open to do one job and leave.
+ */
+
+:root {
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Neo-Swiss Archival Light Palette */
+  --bg-page: #fbfbfa;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f4f6f8;
+  --bg-surface-subtle: #edf1f5;
+
+  --border-light: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-accent: #a7f3d0;
+
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
+
+  --accent: #059669;
+  --accent-deep: #166534;
+  --accent-hover: #047857;
+  --accent-surface: #ecfdf5;
+
+  /* Semantic states, tuned to the same 60-degree hue family as the accent so the
+     result panel reads as one system rather than four borrowed colours. */
+  --ok: #059669;
+  --ok-surface: #ecfdf5;
+  --ok-border: #a7f3d0;
+  --warn: #b45309;
+  --warn-surface: #fffbeb;
+  --warn-border: #fde68a;
+  --bad: #b91c1c;
+  --bad-surface: #fef2f2;
+  --bad-border: #fecaca;
+
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 14px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 28px -6px rgba(15, 23, 42, 0.08), 0 6px 14px -4px rgba(15, 23, 42, 0.04);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Neo-Swiss Titanium Obsidian Dark Palette */
+    --bg-page: #090d14;
+    --bg-surface: #111726;
+    --bg-surface-elevated: #162032;
+    --bg-surface-subtle: #1c273c;
+
+    --border-light: #1e293b;
+    --border-hover: #334155;
+    --border-accent: #064e3b;
+
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-subtle: #64748b;
+
+    --accent: #10b981;
+    --accent-deep: #34d399;
+    --accent-hover: #059669;
+    --accent-surface: rgba(16, 185, 129, 0.12);
+
+    --ok: #34d399;
+    --ok-surface: rgba(16, 185, 129, 0.1);
+    --ok-border: #064e3b;
+    --warn: #fbbf24;
+    --warn-surface: rgba(217, 119, 6, 0.15);
+    --warn-border: rgba(217, 119, 6, 0.3);
+    --bad: #f87171;
+    --bad-surface: rgba(220, 38, 38, 0.12);
+    --bad-border: rgba(220, 38, 38, 0.28);
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 14px -2px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 28px -6px rgba(0, 0, 0, 0.6);
+
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ------------------------------------------------------------------ structure */
+
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 22px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* The wordmark. Deliberately not an anchor — the product name is not a link to the
+   suite, only the tag beside it is. The anchor styling is kept so the two sit on the
+   same baseline and optical weight. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand-name span {
+  color: var(--accent);
+}
+
+.masthead-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  text-decoration: none;
+}
+
+.masthead-tag:hover {
+  color: var(--accent);
+}
+
+.hero {
+  margin-bottom: 28px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.35rem 1rem;
+  background: var(--accent-surface);
+  color: var(--accent-deep);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  margin-bottom: 1.1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hero-badge {
+    color: var(--accent);
+  }
+}
+
+.hero-badge .pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4.5vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+  margin: 0 0 0.6rem;
+}
+
+.hero p.lead {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  max-width: 62ch;
+  margin: 0;
+}
+
+/* The three-claim strip. Present because "nothing leaves your machine" is the whole
+   pitch, and a claim nobody can see is a claim nobody believes. */
+.claims {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.75rem;
+  margin: 1.5rem 0 0;
+  padding: 0.85rem 1.25rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+}
+
+.claim {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.claim svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.claim strong {
+  color: var(--text-main);
+}
+
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* --------------------------------------------------------- companion teaser */
+
+/* StatuteGraph is not built yet. The card exists so the download has an obvious next
+   step, and so the tool reads as half of a pair rather than a dead end. Quieter than a
+   real product card on purpose: it should not compete with the parse button above. */
+.companion {
+  background: var(--bg-surface-elevated);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.companion-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.companion-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: var(--warn-surface);
+  border: 1px solid var(--warn-border);
+  color: var(--warn);
+}
+
+.companion-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.companion-summary {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 58ch;
+}
+
+/* A link styled as the secondary button, so the two button shapes stay identical. */
+.btn-secondary {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1.15rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent);
+  background: var(--accent-surface);
+  color: var(--accent-deep);
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn-secondary:hover {
+    color: var(--accent);
+  }
+}
+
+/* --------------------------------------------------------------- drop target */
+
+.drop {
+  border: 1.5px dashed var(--border-hover);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--bg-surface-elevated);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.drop:hover,
+.drop.over {
+  border-color: var(--accent);
+  background: var(--accent-surface);
+}
+
+.drop.busy {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.drop strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.drop span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------- progress */
+
+/* Indeterminate on purpose. The engine reports extraction, parsing and serialisation
+   and nothing finer, so a percentage would be invented rather than measured. */
+.bar {
+  height: 6px;
+  background: var(--bg-surface-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin: 18px 0 10px;
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+  width: 35%;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  animation: slide 1.1s ease-in-out infinite;
+}
+
+@keyframes slide {
+  0% { margin-left: -35%; }
+  100% { margin-left: 100%; }
+}
+
+.bar.done > i {
+  width: 100%;
+  animation: none;
+  background: var(--ok);
+}
+
+.bar.failed > i {
+  width: 100%;
+  animation: none;
+  background: var(--bad);
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.status b {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.status .elapsed {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.result-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.schema-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------- tiles */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.stat b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.stat span {
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Structural breakdown. Answers "what did it actually find" for someone who is about
+   to trust the output with a downstream system. */
+.kinds {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+}
+
+.kinds-head {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-subtle);
+  margin-bottom: 0.7rem;
+}
+
+.kind-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.25rem 0;
+  font-size: 12.5px;
+}
+
+.kind-row .kind-name {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  width: 132px;
+  flex-shrink: 0;
+}
+
+.kind-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-surface-subtle);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.kind-track > i {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  opacity: 0.75;
+}
+
+.kind-row .kind-count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-main);
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.relations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-light);
+}
+
+.pill {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.28rem 0.7rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+}
+
+.pill.accent {
+  background: var(--accent-surface);
+  border-color: var(--border-accent);
+  color: var(--accent-deep);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pill.accent {
+    color: var(--accent);
+  }
+}
+
+.pill strong {
+  color: var(--text-main);
+  margin-left: 0.35rem;
+}
+
+/* --------------------------------------------------------------------- notes */
+
+.note {
+  margin-top: 16px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  border: 1px solid;
+}
+
+.note.warn {
+  background: var(--warn-surface);
+  border-color: var(--warn-border);
+  color: var(--warn);
+}
+
+.note.info {
+  background: var(--accent-surface);
+  border-color: var(--border-accent);
+  color: var(--text-muted);
+}
+
+.note.bad {
+  background: var(--bad-surface);
+  border-color: var(--bad-border);
+  color: var(--bad);
+}
+
+.note code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 0.05em 0.3em;
+}
+
+/* ------------------------------------------------------------------- actions */
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+button {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1.15rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  background: var(--bg-surface-elevated);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Primary is ink, not accent. The accent is reserved for status, so a green button
+   would read as "already done" — the same decision the house site makes. */
+button.primary {
+  background: var(--text-main);
+  border-color: var(--text-main);
+  color: var(--bg-page);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+button.primary svg {
+  color: inherit;
+}
+
+/* -------------------------------------------------------------------- footer */
+
+.site-footer {
+  margin-top: 34px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+  font-size: 12.5px;
+  color: var(--text-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.site-footer a {
+  color: var(--text-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+}
+
+.footer-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+/* -------------------------------------------------------------------- states */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    padding: 20px 16px 48px;
+  }
+  .claims {
+    border-radius: var(--radius-lg);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+  .kind-row .kind-name {
+    width: 104px;
+  }
+  button {
+    flex: 1;
+    justify-content: center;
+  }
+}

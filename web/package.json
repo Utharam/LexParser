@@ -1,0 +1,28 @@
+{
+  "name": "lexparser-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "LexParser by Utharam — parses Indian statute PDFs into Akoma Ntoso JSON entirely in the browser. Deployable as static assets.",
+  "scripts": {
+    "dev": "npm run wasm && vite",
+    "build": "npm run wasm && vue-tsc --noEmit && vite build",
+    "build:web": "vue-tsc --noEmit && vite build",
+    "wasm": "cargo wasm && node ../tools/copy-wasm.mjs",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "smoke": "node ../tools/wasm-smoke.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vue-tsc": "^2.2.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}

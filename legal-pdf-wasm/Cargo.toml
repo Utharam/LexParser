@@ -1,0 +1,27 @@
+[package]
+name = "legal-pdf-wasm"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Browser WebAssembly bridge for the indian-statute PDF profile"
+
+[lib]
+# `cdylib` is what the browser loads. `rlib` is kept so the crate can be unit-tested
+# on the host target without going through WebAssembly.
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+
+[dependencies]
+# The whole engine, addressed through the root package's `pdf` feature. That feature
+# deliberately excludes `ocr` and `kraken`: they need C++ (`legal-pdf-ocr/build.rs`)
+# and C (`mimalloc`), neither of which compiles for `wasm32-unknown-unknown`. Keeping
+# the WASM surface on one feature is what lets the engine run in a browser at all.
+legal-pdf-parser = { path = "..", default-features = false, features = ["pdf"] }
+serde_json = "1.0"
+
+[dev-dependencies]
+# Used only by the in-crate fixture builder, which writes a two-line PDF in memory so
+# no checked-in binary is needed.
+lopdf = { version = "0.45.0", default-features = false }

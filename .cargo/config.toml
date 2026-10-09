@@ -1,0 +1,16 @@
+[build]
+# One cache for every invocation; leave one logical core free for the laptop.
+target-dir = "target"
+jobs = -1
+
+[alias]
+# `--features pdf` is not optional here. The root `default` is empty and every engine
+# module is behind `#[cfg(feature = "pdf")]`, so a bare `check --lib` would typecheck
+# almost none of the parser.
+quick = "check --lib --offline --quiet --features pdf"
+# The browser module. Kept as its own alias because it is the only target that does not
+# use the host linker below, and it must not inherit it.
+wasm = "build --release --target wasm32-unknown-unknown -p legal-pdf-wasm"
+
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"

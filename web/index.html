@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>LexParser by Utharam — Legal PDFs into Akoma Ntoso JSON, in your browser</title>
+    <meta
+      name="description"
+      content="LexParser turns an Indian statute or rules PDF into Akoma Ntoso JSON — sections, clauses, citations and footnotes — parsed entirely in the browser. Zero uploads, nothing leaves your machine. A Utharam tool."
+    />
+    <meta name="author" content="Utharam" />
+    <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#090d14" media="(prefers-color-scheme: dark)" />
+
+    <!--
+      Favicon: an inline SVG so there is no request for it and no 404. An emerald
+      rounded square with a monospace "L", the same construction as the Utharam house
+      mark on utharam.in — one letter, because a wordmark shrinks to an unreadable smudge
+      at 16px and a decorative glyph would stop matching the masthead.
+    -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23059669'/%3E%3Ctext x='16' y='23' font-family='monospace' font-weight='800' font-size='19' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E"
+    />
+
+    <!-- Open Graph, for when the URL is pasted somewhere that renders a preview. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LexParser by Utharam" />
+    <meta property="og:title" content="LexParser — Legal PDFs into structured JSON" />
+    <meta
+      property="og:description"
+      content="Akoma Ntoso JSON from an Indian statute PDF, parsed entirely in the browser. Zero uploads."
+    />
+    <meta property="og:url" content="https://lexparser.utharam.in/" />
+
+    <!-- Plus Jakarta Sans for display, Inter for body, JetBrains Mono for counts. The
+         same three the rest of the Utharam suite loads, so a warm cache is shared. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Theme flash prevention. Applied before first paint so a dark-mode visitor does not
+      get a white frame while the module loads. Light is the default, matching the house
+      site; there is no toggle, because a parser is opened to do one job and left.
+    -->
+    <script>
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.style.colorScheme = 'dark'
+      }
+    </script>
+
+    <script type="module" src="./src/main.ts"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
