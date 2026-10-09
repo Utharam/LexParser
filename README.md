@@ -44,44 +44,62 @@ Set these under **Settings → Builds & deployments**:
 
 | Field | Value |
 | --- | --- |
-| Build command | `cd web && npm install && npm run build:web` |
-| Build output directory | `web/dist` |
-| Node version | 20 or newer |
+| Build command | `npm run build` |
+| Deploy command | *leave empty* |
+| Root directory | `/` |
 
-Use `build:web`, **not** `build`. The difference is the `npm run wasm` step: Cloudflare's
-Pages image has no Rust toolchain and no `wasm32-unknown-unknown` target, and a
-from-scratch cargo release build of this engine does not fit the Pages build-time limit.
-That is why `web/src/legalpdf.wasm` is committed rather than gitignored — the deploy
-compiles only the TypeScript and ships the module the Rust source currently produces.
+Leave **Deploy command empty**. Pages then deploys the build output itself, using
+`pages_build_output_dir` from `wrangler.toml` to locate it, and no API token is
+involved. Filling that field in hands deployment to `wrangler pages deploy`, which
+needs a token carrying *Cloudflare Pages: Edit* — see *Two deployment mistakes that look
+like this one* below.
 
-Rebuild it with `npm run wasm` and commit the result whenever the engine changes.
+The root `package.json` declares an npm workspace covering `web/`. That is load-bearing:
+Pages runs `npm clean-install` at the root, and a root manifest with no dependencies
+installs nothing. `web/node_modules` is never created and the build fails with
+`sh: 1: vue-tsc: not found`. There is one lockfile, at the root.
+
+`npm run build` does **not** rebuild the wasm. Cloudflare's Pages image has no Rust
+toolchain and no `wasm32-unknown-unknown` target, and a from-scratch cargo release build
+of this engine does not fit the Pages build-time limit. That is why
+`web/src/legalpdf.wasm` is committed rather than gitignored — the deploy compiles only
+the TypeScript and ships the module the Rust source currently produces.
+
+Rebuild it with `npm run build:wasm` and commit the result whenever the engine changes.
 `cargo quick` will not notice a stale one.
 
-### Why a wrong output directory looks like a MIME error
+### Two deployment mistakes that look like this one
 
-Pages falls back to the repository root as its output directory when it has no build to
-serve. Serving the root serves `web/index.html` verbatim, and that file's script tag
-points at `./src/main.ts`. Pages returns `.ts` with `video/mp2t` — the MPEG transport
-stream mapping, since the extension is ambiguous between TypeScript and video — and the
-browser refuses to execute a module script with that type:
+Both produce a build that looks fine and a deploy that fails, and the error text points
+somewhere unhelpful.
+
+**A wrong output directory looks like a MIME error.** Pages falls back to the repository
+root when it has no build to serve, which serves `web/index.html` verbatim. That file's
+script tag points at `./src/main.ts`, and Pages returns `.ts` with `video/mp2t` — the
+MPEG transport-stream mapping, since the extension is ambiguous between TypeScript and
+video:
 
 ```
 main.ts:1 Failed to load module script: Expected a JavaScript-or-Wasm module script
 but the server responded with a MIME type of "video/mp2t".
 ```
 
-If you see that, check the output directory before anything else. `wrangler.toml` pins
-`pages_build_output_dir = "web/dist"` for the `wrangler pages deploy` path; the
-Git-connected dashboard does not read that file, which is why the two settings above
-have to match it.
+**A wrong deploy command looks like an authentication error.** `npx wrangler deploy` is
+the *Workers* command and fails with `Missing entry-point to Worker script or to assets
+directory`. The Pages equivalent is `npx wrangler pages deploy web/dist`, and if that
+fails with `Authentication error [code: 10000]`, the API token in the Pages environment
+lacks *Cloudflare Pages: Edit*. Note that a Super Administrator *account role* does not
+help: the API checks the token's own scopes, not the account membership. Fixing the token
+works, but leaving the field empty is simpler — then Pages deploys without a token at all.
 
 ### From the command line
 
 ```sh
-cd web && npm run deploy
+npm run deploy
 ```
 
-Pushes `web/dist` straight to Pages and bypasses the Git integration.
+Builds, then runs `wrangler pages deploy dist`. Needs `wrangler login` on that machine,
+and bypasses the Git integration.
 
 ## How it is wired
 

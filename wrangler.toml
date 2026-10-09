@@ -14,19 +14,22 @@
 #    ambiguous between TypeScript and video. The browser refuses to execute a module
 #    script with that type, so the page never boots.
 #
-# The Git-connected dashboard must be configured to match. Note that the current Pages UI
-# has *two* separate fields, and this is where deployments usually go wrong:
+# Deploy settings for the Cloudflare Pages dashboard. Note that the current Pages UI has
+# *two* separate fields, and only one of them should be filled in:
 #
-#   Build command:            npm run build
-#   Deploy command:           npx wrangler pages deploy web/dist
-#   Root directory:           /   (the repository root)
+#   Build command:    npm run build
+#   Deploy command:   (leave EMPTY)
+#   Root directory:   /   (the repository root)
 #
-# `npm run build` writes to `web/dist`, so the deploy command names that path. Leaving
-# Deploy command as the Workers default, `npx wrangler deploy`, fails with "Missing
-# entry-point to Worker script or to assets directory" — it is the Workers command and
-# this is a Pages project. Putting `npm run build` in Deploy command instead of Build
-# command also works mechanically, but Pages then has no build step of its own, which is
-# what produces "Detected the following tools from environment:" with nothing after it.
+# Leave Deploy command empty on purpose. Pages then deploys the build output itself,
+# using `pages_build_output_dir` below to find it, and no API token is involved. Filling
+# that field in hands deployment to `wrangler pages deploy`, which needs a token
+# carrying "Cloudflare Pages: Edit" — a token with only Workers or account scope fails
+# with "Authentication error [code: 10000]" even when the account role is Super
+# Administrator, because the token's own scopes are what the API checks.
+#
+# For a command-line deploy from a machine that has already run `wrangler login`, use
+# `npm run deploy` instead. That path bypasses the dashboard entirely.
 #
 # The root `package.json` declares an npm workspace covering `web/`. That matters: Pages
 # runs `npm clean-install` at the root, and a root manifest with no dependencies installs
@@ -35,10 +38,10 @@
 # hoists every dependency and the build finds its binaries.
 #
 # `npm run build` deliberately does NOT rebuild the wasm. Cloudflare's Pages image has no
-# Rust toolchain and no `wasm32-unknown-unknown` target, so `npm run wasm` would fail
-# there. That is why `web/src/legalpdf.wasm` is committed: the deploy compiles only the
-# TypeScript and ships the module the Rust source currently builds to. Rebuild it with
-# `npm run build:wasm` and commit the result whenever the engine changes.
+# Rust toolchain and no `wasm32-unknown-unknown` target, so `npm run build:wasm` would
+# fail there. That is why `web/src/legalpdf.wasm` is committed: the deploy compiles only
+# the TypeScript and ships the module the Rust source currently builds to. Rebuild it
+# with `npm run build:wasm` and commit the result whenever the engine changes.
 
 name = "lexparser"
 pages_build_output_dir = "web/dist"
