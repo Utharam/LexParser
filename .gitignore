@@ -49,9 +49,17 @@ sym_shape_infer_temp.onnx
 statute-web/node_modules/
 statute-web/web-dist/
 
-# The compiled parser module. Rebuilt from Rust by `npm run wasm` in `web/`, so it is a
-# build artifact rather than a source file, and it is 21 MB.
-web/src/legalpdf.wasm
+# `web/src/legalpdf.wasm` is deliberately NOT ignored, unlike most build output.
+#
+# It is compiled from the Rust in this repo, but the browser build needs it committed
+# because Cloudflare Pages cannot compile it: the Pages image has no Rust toolchain and
+# no `wasm32-unknown-unknown` target, and a from-scratch cargo release build of the whole
+# engine does not fit the build time limit. Committing the 21 MB module means the deploy
+# is `npm run build:web` — Node only — and always produces the module the Rust source
+# currently builds to.
+#
+# Rebuild it with `npm run wasm` in `web/` and commit the result whenever the engine
+# changes. `cargo quick` will not notice a stale one.
 
 # Local-only reference implementation and one-time porting tools.
 /src/legalpdf/

@@ -20,21 +20,68 @@ cd web && npm install
 npm run build                                # builds the .wasm, typechecks, then bundles
 ```
 
-`npm run build` emits `web/dist`. Point Cloudflare Pages at that directory. No build
-command is needed on their side if you build before pushing.
-
 | Script | What it does |
 | --- | --- |
 | `npm run dev` | Builds the module, then serves with HMR |
 | `npm run wasm` | Builds `legal-pdf-wasm` and copies it to `web/src/` |
 | `npm run build` | `wasm`, then `vue-tsc`, then `vite build` |
-| `npm run build:web` | Skips the Rust build when only the UI changed |
+| `npm run build:web` | Skips the Rust build; what Cloudflare runs |
+| `npm run deploy` | `build:web`, then `wrangler pages deploy` |
 | `npm run typecheck` | `vue-tsc --noEmit` |
 | `npm run smoke` | Runs the module against a real PDF outside the browser |
 
 The `.wasm` is 21 MB, about 5.2 MB over the wire. It is a full engine with the PDF
 layout model, the statutory grammar and the citation tables, not a trimmed build; see
 *Layout* below for what would have to go to shrink it.
+
+## Deploying
+
+`web/dist` is the whole site — no server, no Pages Functions.
+
+### Cloudflare Pages, Git-connected
+
+Set these under **Settings → Builds & deployments**:
+
+| Field | Value |
+| --- | --- |
+| Build command | `cd web && npm install && npm run build:web` |
+| Build output directory | `web/dist` |
+| Node version | 20 or newer |
+
+Use `build:web`, **not** `build`. The difference is the `npm run wasm` step: Cloudflare's
+Pages image has no Rust toolchain and no `wasm32-unknown-unknown` target, and a
+from-scratch cargo release build of this engine does not fit the Pages build-time limit.
+That is why `web/src/legalpdf.wasm` is committed rather than gitignored — the deploy
+compiles only the TypeScript and ships the module the Rust source currently produces.
+
+Rebuild it with `npm run wasm` and commit the result whenever the engine changes.
+`cargo quick` will not notice a stale one.
+
+### Why a wrong output directory looks like a MIME error
+
+Pages falls back to the repository root as its output directory when it has no build to
+serve. Serving the root serves `web/index.html` verbatim, and that file's script tag
+points at `./src/main.ts`. Pages returns `.ts` with `video/mp2t` — the MPEG transport
+stream mapping, since the extension is ambiguous between TypeScript and video — and the
+browser refuses to execute a module script with that type:
+
+```
+main.ts:1 Failed to load module script: Expected a JavaScript-or-Wasm module script
+but the server responded with a MIME type of "video/mp2t".
+```
+
+If you see that, check the output directory before anything else. `wrangler.toml` pins
+`pages_build_output_dir = "web/dist"` for the `wrangler pages deploy` path; the
+Git-connected dashboard does not read that file, which is why the two settings above
+have to match it.
+
+### From the command line
+
+```sh
+cd web && npm run deploy
+```
+
+Pushes `web/dist` straight to Pages and bypasses the Git integration.
 
 ## How it is wired
 

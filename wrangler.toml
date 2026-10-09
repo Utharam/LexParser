@@ -1,0 +1,22 @@
+# Cloudflare Pages configuration.
+#
+# Why this file exists: Pages defaults to no build command and the repository root as
+# its output directory. With the root as the output directory it serves `web/index.html`
+# verbatim, and that file references `./src/main.ts` — which Pages then returns with the
+# MIME type for an MPEG transport stream (`video/mp2t`), because `.ts` is ambiguous
+# between TypeScript and video. The browser refuses to execute a module with that type,
+# so the page never boots.
+#
+# `pages_build_output_dir` is what `wrangler pages deploy` reads. The Git-connected
+# dashboard does NOT read it — set the two build fields in the dashboard to match:
+#
+#   Build command:    cd web && npm install && npm run build
+#   Build output:     web/dist
+#
+# The build command installs the wasm target first. Cloudflare's Pages image ships Rust
+# but not `wasm32-unknown-unknown`, and without it the crate that builds the parser fails
+# to compile — a build failure that looks nothing like the MIME error above.
+
+name = "lexparser"
+pages_build_output_dir = "web/dist"
+compatibility_date = "2026-01-01"
