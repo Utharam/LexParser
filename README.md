@@ -38,21 +38,20 @@ layout model, the statutory grammar and the citation tables, not a trimmed build
 
 `web/dist` is the whole site — no server, no Pages Functions.
 
-### Cloudflare Pages, Git-connected
+### Cloudflare Workers Builds, Git-connected
 
 Set these under **Settings → Builds & deployments**:
 
 | Field | Value |
 | --- | --- |
 | Build command | `npm run build` |
-| Deploy command | *leave empty* |
+| Deploy command | `npx wrangler deploy` |
 | Root directory | `/` |
 
-Leave **Deploy command empty**. Pages then deploys the build output itself, using
-`pages_build_output_dir` from `wrangler.toml` to locate it, and no API token is
-involved. Filling that field in hands deployment to `wrangler pages deploy`, which
-needs a token carrying *Cloudflare Pages: Edit* — see *Two deployment mistakes that look
-like this one* below.
+`wrangler.toml` uses `[assets]` pointing to `web/dist` with SPA routing. When
+Cloudflare builds the site, `npm run build` compiles `web/dist`, and
+`npx wrangler deploy` uploads and deploys the static assets using the native Workers
+credentials (preventing Pages API token permission errors).
 
 The root `package.json` declares an npm workspace covering `web/`. That is load-bearing:
 Pages runs `npm clean-install` at the root, and a root manifest with no dependencies

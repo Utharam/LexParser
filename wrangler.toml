@@ -1,48 +1,28 @@
-# Cloudflare Pages configuration.
+# Cloudflare Workers configuration with Static Assets.
 #
-# Two separate failures produced confusing symptoms here, so both are recorded:
-#
-# 1. `npx wrangler deploy` is the *Workers* command. On a Pages project it fails with
-#    "Missing entry-point to Worker script or to assets directory", and the right one is
-#    `wrangler pages deploy`. Pages itself never runs this file's build: the Git-connected
-#    dashboard runs the build command from its own settings, then hands the directory
-#    named by `pages_build_output_dir` to the edge.
-#
-# 2. With no build, Pages serves the repository root, which contains `web/index.html`
-#    verbatim. That file's script tag points at `./src/main.ts`, and Pages returns `.ts`
-#    with `video/mp2t` — the MPEG transport stream mapping, because the extension is
-#    ambiguous between TypeScript and video. The browser refuses to execute a module
-#    script with that type, so the page never boots.
-#
-# Deploy settings for the Cloudflare Pages dashboard. Note that the current Pages UI has
-# *two* separate fields, and only one of them should be filled in:
+# When connecting this repository to Cloudflare (Workers Builds), configure the
+# Build settings in the Cloudflare dashboard as follows:
 #
 #   Build command:    npm run build
-#   Deploy command:   (leave EMPTY)
+#   Deploy command:   npx wrangler deploy
 #   Root directory:   /   (the repository root)
 #
-# Leave Deploy command empty on purpose. Pages then deploys the build output itself,
-# using `pages_build_output_dir` below to find it, and no API token is involved. Filling
-# that field in hands deployment to `wrangler pages deploy`, which needs a token
-# carrying "Cloudflare Pages: Edit" — a token with only Workers or account scope fails
-# with "Authentication error [code: 10000]" even when the account role is Super
-# Administrator, because the token's own scopes are what the API checks.
-#
-# For a command-line deploy from a machine that has already run `wrangler login`, use
-# `npm run deploy` instead. That path bypasses the dashboard entirely.
-#
-# The root `package.json` declares an npm workspace covering `web/`. That matters: Pages
-# runs `npm clean-install` at the root, and a root manifest with no dependencies installs
-# nothing — `web/node_modules` is never created and the build dies with
-# "sh: 1: vue-tsc: not found". With the workspace declared, one install at the root
-# hoists every dependency and the build finds its binaries.
-#
-# `npm run build` deliberately does NOT rebuild the wasm. Cloudflare's Pages image has no
-# Rust toolchain and no `wasm32-unknown-unknown` target, so `npm run build:wasm` would
-# fail there. That is why `web/src/legalpdf.wasm` is committed: the deploy compiles only
-# the TypeScript and ships the module the Rust source currently builds to. Rebuild it
-# with `npm run build:wasm` and commit the result whenever the engine changes.
+# Why this configuration:
+# 1. `[assets]` configures Cloudflare to deploy and host the static files in `web/dist`
+#    directly via the Workers edge network with SPA routing enabled.
+# 2. `npx wrangler deploy` is the native Workers deploy command. Unlike `wrangler pages deploy`,
+#    it uses the standard Workers API and the ambient Workers credentials provided by
+#    Cloudflare Workers Builds without triggering API authentication errors (code: 10000).
+# 3. The root `package.json` declares an npm workspace covering `web/`. When Pages / Workers
+#    runs `npm clean-install` at root, dependencies are hoisted so `vue-tsc` and `vite` are found.
+# 4. `npm run build` at root invokes `npm run build:web --workspace web`, deliberately skipping
+#    Rust/WASM compilation (since Cloudflare's build image lacks the wasm32 target).
+#    The precompiled `web/src/legalpdf.wasm` is shipped directly. Rebuild the WASM locally
+#    with `npm run build:wasm` and commit whenever the Rust engine changes.
 
 name = "lexparser"
-pages_build_output_dir = "web/dist"
 compatibility_date = "2026-01-01"
+
+[assets]
+directory = "web/dist"
+not_found_handling = "single-page-application"
