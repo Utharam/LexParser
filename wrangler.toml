@@ -1,21 +1,34 @@
 # Cloudflare Pages configuration.
 #
-# Why this file exists: Pages defaults to no build command and the repository root as
-# its output directory. With the root as the output directory it serves `web/index.html`
-# verbatim, and that file references `./src/main.ts` — which Pages then returns with the
-# MIME type for an MPEG transport stream (`video/mp2t`), because `.ts` is ambiguous
-# between TypeScript and video. The browser refuses to execute a module with that type,
-# so the page never boots.
+# Two separate failures produced confusing symptoms here, so both are recorded:
 #
-# `pages_build_output_dir` is what `wrangler pages deploy` reads. The Git-connected
-# dashboard does NOT read it — set the two build fields in the dashboard to match:
+# 1. `npx wrangler deploy` is the *Workers* command. On a Pages project it fails with
+#    "Missing entry-point to Worker script or to assets directory", and the right one is
+#    `wrangler pages deploy`. Pages itself never runs this file's build: the Git-connected
+#    dashboard runs the build command from its own settings, then hands the directory
+#    named by `pages_build_output_dir` to the edge.
 #
-#   Build command:    cd web && npm install && npm run build
-#   Build output:     web/dist
+# 2. With no build, Pages serves the repository root, which contains `web/index.html`
+#    verbatim. That file's script tag points at `./src/main.ts`, and Pages returns `.ts`
+#    with `video/mp2t` — the MPEG transport stream mapping, because the extension is
+#    ambiguous between TypeScript and video. The browser refuses to execute a module
+#    script with that type, so the page never boots.
 #
-# The build command installs the wasm target first. Cloudflare's Pages image ships Rust
-# but not `wasm32-unknown-unknown`, and without it the crate that builds the parser fails
-# to compile — a build failure that looks nothing like the MIME error above.
+# The Git-connected dashboard must be configured to match:
+#
+#   Build command:           npm run build
+#   Build output directory:  web/dist
+#   Root directory:          /  (the repository root)
+#
+# The root `package.json` exists for that build command. Pages looks for a manifest at
+# the root; without one it reports "Detected the following tools from environment:" with
+# nothing after it, cannot cache dependencies, and runs no build at all.
+#
+# `npm run build` deliberately does NOT rebuild the wasm. Cloudflare's Pages image has no
+# Rust toolchain and no `wasm32-unknown-unknown` target, so `npm run wasm` would fail
+# there. That is why `web/src/legalpdf.wasm` is committed: the deploy compiles only the
+# TypeScript and ships the module the Rust source currently builds to. Rebuild it with
+# `npm run wasm` and commit the result whenever the engine changes.
 
 name = "lexparser"
 pages_build_output_dir = "web/dist"
