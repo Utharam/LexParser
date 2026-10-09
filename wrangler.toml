@@ -24,17 +24,21 @@
 # `npm run build` writes to `web/dist`, so the deploy command names that path. Leaving
 # Deploy command as the Workers default, `npx wrangler deploy`, fails with "Missing
 # entry-point to Worker script or to assets directory" — it is the Workers command and
-# this is a Pages project.
+# this is a Pages project. Putting `npm run build` in Deploy command instead of Build
+# command also works mechanically, but Pages then has no build step of its own, which is
+# what produces "Detected the following tools from environment:" with nothing after it.
 #
-# The root `package.json` exists for the build command. Pages looks for a manifest at
-# the root; without one it reports "Detected the following tools from environment:" with
-# nothing after it, cannot cache dependencies, and runs no build at all.
+# The root `package.json` declares an npm workspace covering `web/`. That matters: Pages
+# runs `npm clean-install` at the root, and a root manifest with no dependencies installs
+# nothing — `web/node_modules` is never created and the build dies with
+# "sh: 1: vue-tsc: not found". With the workspace declared, one install at the root
+# hoists every dependency and the build finds its binaries.
 #
 # `npm run build` deliberately does NOT rebuild the wasm. Cloudflare's Pages image has no
 # Rust toolchain and no `wasm32-unknown-unknown` target, so `npm run wasm` would fail
 # there. That is why `web/src/legalpdf.wasm` is committed: the deploy compiles only the
 # TypeScript and ships the module the Rust source currently builds to. Rebuild it with
-# `npm run wasm` and commit the result whenever the engine changes.
+# `npm run build:wasm` and commit the result whenever the engine changes.
 
 name = "lexparser"
 pages_build_output_dir = "web/dist"

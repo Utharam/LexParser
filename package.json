@@ -3,13 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "description": "LexParser by Utharam — parses Indian statute PDFs into Akoma Ntoso JSON in the browser. Workspace root for the Vue UI and the Rust engine.",
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
-    "build": "npm --prefix web run build:web",
-    "dev": "npm --prefix web run dev",
-    "typecheck": "npm --prefix web run typecheck",
-    "wasm": "npm --prefix web run wasm",
-    "deploy": "npm --prefix web run deploy",
-    "smoke": "npm --prefix web run smoke"
+    "build": "npm run build:web --workspace web",
+    "build:wasm": "npm run wasm --workspace web",
+    "deploy": "npm run deploy --workspace web",
+    "dev": "npm run dev --workspace web",
+    "preview": "npm run preview --workspace web",
+    "smoke": "npm run smoke --workspace web",
+    "typecheck": "npm run typecheck --workspace web"
   },
   "engines": {
     "node": ">=20"

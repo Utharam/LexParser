@@ -23,8 +23,5 @@
     "typescript": "^5.7.3",
     "vite": "^6.0.7",
     "vue-tsc": "^2.2.0"
-  },
-  "allowScripts": {
-    "esbuild@0.25.12": true
   }
 }
