@@ -14,13 +14,19 @@
 #    ambiguous between TypeScript and video. The browser refuses to execute a module
 #    script with that type, so the page never boots.
 #
-# The Git-connected dashboard must be configured to match:
+# The Git-connected dashboard must be configured to match. Note that the current Pages UI
+# has *two* separate fields, and this is where deployments usually go wrong:
 #
-#   Build command:           npm run build
-#   Build output directory:  web/dist
-#   Root directory:          /  (the repository root)
+#   Build command:            npm run build
+#   Deploy command:           npx wrangler pages deploy web/dist
+#   Root directory:           /   (the repository root)
 #
-# The root `package.json` exists for that build command. Pages looks for a manifest at
+# `npm run build` writes to `web/dist`, so the deploy command names that path. Leaving
+# Deploy command as the Workers default, `npx wrangler deploy`, fails with "Missing
+# entry-point to Worker script or to assets directory" — it is the Workers command and
+# this is a Pages project.
+#
+# The root `package.json` exists for the build command. Pages looks for a manifest at
 # the root; without one it reports "Detected the following tools from environment:" with
 # nothing after it, cannot cache dependencies, and runs no build at all.
 #
